@@ -7,15 +7,18 @@
     "dev": "ts-node-dev --respawn src/index.ts",
     "test": "vitest run"
   },
+  "prisma": {
+    "seed": "ts-node src/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "6.0.0",
-    "prisma": "6.0.0",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "prisma": "6.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

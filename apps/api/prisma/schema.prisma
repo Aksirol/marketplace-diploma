@@ -7,7 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Ролі користувачів
+// ================= ENUMS (Перелічення) =================
+
 enum Role {
   GUEST
   USER
@@ -15,18 +16,291 @@ enum Role {
   ADMIN
 }
 
-// Базова таблиця користувачів з твоєї ERD
+enum StoreStatus {
+  PENDING   // Очікує модерації
+  ACTIVE    // Працює
+  SUSPENDED // Заблоковано
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ================= MODELS (Таблиці) =================
+
 model User {
-  id            String   @id @default(uuid())
-  email         String?  @unique
+  id            String    @id @default(uuid())
+  email         String?   @unique
   password_hash String?
-  role          Role     @default(GUEST)
+  role          Role      @default(GUEST)
   first_name    String?
   last_name     String?
   phone         String?
   avatar_url    String?
-  is_active     Boolean  @default(true)
-  created_at    DateTime @default(now())
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
 
-  @@map("USERS") // Вказуємо назву таблиці в базі даних як на ER-діаграмі
+  // Зв'язки
+  store           Store?
+  orders          Order[]          @relation("BuyerOrders")
+  reviews         Review[]
+  sentMessages    Message[]        @relation("SentMessages") // Пояснення для дипломної: два зв'язки до однієї таблиці
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  wishlists       Wishlist[]
+  tickets         SupportTicket[]
+  ticketMessages  TicketMessage[]
+
+  @@index([email]) // Індекс для швидкого пошуку при логіні
+  @@map("USERS")
+}
+
+model Store {
+  id          String      @id @default(uuid())
+  user_id     String      @unique
+  name        String
+  description String?
+  location    String?
+  logo_url    String?
+  banner_url  String?
+  status      StoreStatus @default(PENDING)
+  created_at  DateTime    @default(now())
+
+  // Зв'язки
+  user        User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  products    Product[]
+  orders      Order[]
+  docs        StoreDoc[]
+
+  @@index([user_id])
+  @@map("STORES")
+}
+
+model StoreDoc {
+  id          String   @id @default(uuid())
+  store_id    String
+  doc_url     String
+  doc_type    String
+  uploaded_at DateTime @default(now())
+
+  store       Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@map("STORE_DOCS")
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  parent_id String?
+  name      String
+  slug      String     @unique
+
+  // Зв'язки (Самореференція для вкладених категорій)
+  parent    Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+
+  @@index([parent_id])
+  @@map("CATEGORIES")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  store_id    String
+  category_id String
+  name        String
+  description String?
+  price       Decimal       @db.Decimal(10, 2)
+  stock_qty   Int           @default(0)
+  status      ProductStatus @default(ACTIVE)
+  created_at  DateTime      @default(now())
+
+  // Зв'язки
+  store       Store          @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  category    Category       @relation(fields: [category_id], references: [id])
+  images      ProductImage[]
+  orderItems  OrderItem[]
+  reviews     Review[]
+  wishlists   Wishlist[]
+
+  @@index([store_id])
+  @@index([category_id])
+  @@map("PRODUCTS")
+}
+
+model ProductImage {
+  id         String  @id @default(uuid())
+  product_id String
+  url        String
+  is_primary Boolean @default(false)
+  sort_order Int     @default(0)
+
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+  @@map("PRODUCT_IMAGES")
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  buyer_id        String?       // Nullable: якщо замовлення робить гість без акаунту
+  store_id        String
+  status          OrderStatus   @default(NEW)
+  total_amount    Decimal       @db.Decimal(10, 2)
+  delivery_method String
+  payment_method  String
+  payment_status  PaymentStatus @default(PENDING)
+  tracking_number String?
+  
+  // Дані гостя (заповнюються, якщо buyer_id === null)
+  guest_name      String?
+  guest_email     String?
+  guest_phone     String?
+  created_at      DateTime      @default(now())
+
+  // Зв'язки
+  buyer           User?         @relation("BuyerOrders", fields: [buyer_id], references: [id], onDelete: SetNull)
+  store           Store         @relation(fields: [store_id], references: [id])
+  items           OrderItem[]
+  address         OrderAddress? // 1:1 зв'язок
+  reviews         Review[]
+  messages        Message[]
+
+  @@index([buyer_id])
+  @@index([store_id])
+  @@map("ORDERS")
+}
+
+model OrderItem {
+  id         String  @id @default(uuid())
+  order_id   String
+  product_id String
+  quantity   Int
+  unit_price Decimal @db.Decimal(10, 2)
+
+  order      Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [product_id], references: [id])
+
+  @@index([order_id])
+  @@map("ORDER_ITEMS")
+}
+
+model OrderAddress {
+  id       String @id @default(uuid())
+  order_id String @unique
+  city     String
+  street   String
+  zip_code String
+
+  order    Order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@map("ORDER_ADDRESSES")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  product_id String
+  user_id    String
+  order_id   String
+  rating     Int      // від 1 до 5
+  comment    String?
+  created_at DateTime @default(now())
+
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [order_id], references: [id])
+
+  @@index([product_id])
+  @@index([user_id])
+  @@map("REVIEWS")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  sender_id   String
+  receiver_id String
+  order_id    String?  // Може бути прив'язане до замовлення
+  content     String
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  sender      User     @relation("SentMessages", fields: [sender_id], references: [id])
+  receiver    User     @relation("ReceivedMessages", fields: [receiver_id], references: [id])
+  order       Order?   @relation(fields: [order_id], references: [id])
+
+  @@index([sender_id])
+  @@index([receiver_id])
+  @@index([order_id])
+  @@map("MESSAGES")
+}
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  user_id    String
+  product_id String
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("WISHLISTS")
+}
+
+model SupportTicket {
+  id         String         @id @default(uuid())
+  user_id    String
+  subject    String
+  status     TicketStatus   @default(OPEN)
+  priority   TicketPriority @default(MEDIUM)
+  created_at DateTime       @default(now())
+
+  user       User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages   TicketMessage[]
+
+  @@index([user_id])
+  @@map("SUPPORT_TICKETS")
+}
+
+model TicketMessage {
+  id         String   @id @default(uuid())
+  ticket_id  String
+  sender_id  String
+  content    String
+  created_at DateTime @default(now())
+
+  ticket     SupportTicket @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
+  sender     User          @relation(fields: [sender_id], references: [id])
+
+  @@index([ticket_id])
+  @@map("TICKET_MESSAGES")
 }
