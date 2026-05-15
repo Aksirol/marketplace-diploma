@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Ролі користувачів
+enum Role {
+  GUEST
+  USER
+  PRODUCER
+  ADMIN
+}
+
+// Базова таблиця користувачів з твоєї ERD
+model User {
+  id            String   @id @default(uuid())
+  email         String?  @unique
+  password_hash String?
+  role          Role     @default(GUEST)
+  first_name    String?
+  last_name     String?
+  phone         String?
+  avatar_url    String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  @@map("USERS") // Вказуємо назву таблиці в базі даних як на ER-діаграмі
+}
