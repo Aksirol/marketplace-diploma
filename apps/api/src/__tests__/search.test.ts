@@ -11,6 +11,8 @@ describe('Search & Filtering Flow', () => {
   let cheeseCategoryId: string;
   let storeFrankivskId: string;
   let storeLvivId: string;
+  let user1Id: string;
+  let user2Id: string;
 
   beforeAll(async () => {
     // Підключаємо Redis
@@ -24,7 +26,10 @@ describe('Search & Filtering Flow', () => {
 
     // 2. Створюємо користувачів-виробників
     const user1 = await prisma.user.create({ data: { email: `prod1-${Date.now()}@test.com`, role: Role.PRODUCER } });
+    user1Id = user1.id;
+    
     const user2 = await prisma.user.create({ data: { email: `prod2-${Date.now()}@test.com`, role: Role.PRODUCER } });
+    user2Id = user2.id;
 
     // 3. Створюємо магазини
     const storeIF = await prisma.store.create({
@@ -56,13 +61,13 @@ describe('Search & Filtering Flow', () => {
     await prisma.category.deleteMany({ where: { id: { in: [honeyCategoryId, cheeseCategoryId] } } });
     // Тут ми видаляємо користувачів не за email (бо ми додали Date.now), а за їх зв'язками, 
     // але найпростіше просто залишити їх в базі для тестів, або видалити так:
-    await prisma.user.deleteMany({ where: { email: { contains: '@test.com' } } });
+    await prisma.user.deleteMany({ where: { id: { in: [user1Id, user2Id] } } });
     
     // Закриваємо з'єднання
     await prisma.$disconnect();
     if (redisClient.isOpen) await redisClient.quit();
   });
-  
+
   it('Пошук: "мед" знаходить "Гречаний мед" та "Липовий мед"', async () => {
     // Використовуємо encodeURIComponent для передачі кирилиці в URL
     const res = await request(app).get(`/api/products?q=${encodeURIComponent('мед')}`);

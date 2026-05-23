@@ -4,6 +4,7 @@ import catalogRoutes from './routes/catalog.routes';
 import { connectRedis } from './lib/redis';
 import cookieParser from 'cookie-parser';
 import cartRoutes from './routes/cart.routes';
+import orderRoutes from './routes/order.routes';
 
 connectRedis()
 
@@ -16,6 +17,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Оновлений Health-check ендпоінт, що повертає версію
 app.get('/api/health', (req: Request, res: Response) => {
