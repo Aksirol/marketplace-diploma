@@ -1,14 +1,21 @@
 import express, { Request, Response } from 'express';
 import authRoutes from './routes/auth.routes';
 import catalogRoutes from './routes/catalog.routes';
+import { connectRedis } from './lib/redis';
+import cookieParser from 'cookie-parser';
+import cartRoutes from './routes/cart.routes';
+
+connectRedis()
 
 export const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Підключаємо маршрути авторизації
 app.use('/api/auth', authRoutes);
 app.use('/api', catalogRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Оновлений Health-check ендпоінт, що повертає версію
 app.get('/api/health', (req: Request, res: Response) => {
