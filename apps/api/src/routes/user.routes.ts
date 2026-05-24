@@ -3,7 +3,8 @@ import { authGuard } from '../middlewares/auth.middleware';
 import { uploadMiddleware } from '../lib/cloudinary';
 import {
   getProfile, updateProfile, changePassword,
-  getAddresses, createAddress, updateAddress, deleteAddress
+  getAddresses, createAddress, updateAddress, deleteAddress,
+  getMyOrders, getWishlist, addToWishlist, removeFromWishlist
 } from '../controllers/user.controller';
 
 const router = Router();
@@ -21,5 +22,12 @@ router.get('/me/addresses', getAddresses);
 router.post('/me/addresses', createAddress);
 router.put('/me/addresses/:id', updateAddress);
 router.delete('/me/addresses/:id', deleteAddress);
+
+router.get('/me/orders', getMyOrders);
+
+// Wishlist
+router.get('/me/wishlist', getWishlist);
+router.post('/me/wishlist', addToWishlist);
+router.delete('/me/wishlist/:productId', removeFromWishlist);
 
 export default router;

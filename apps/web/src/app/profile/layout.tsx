@@ -12,6 +12,8 @@ export default function ProfileLayout({
 
   const navItems = [
     { name: 'Особисті дані', href: '/profile' },
+    { name: 'Мої замовлення', href: '/profile/orders' },  // <--- Додано
+    { name: 'Список бажань', href: '/profile/wishlist' }, // <--- Додано
     { name: 'Мої адреси', href: '/profile/addresses' },
     { name: 'Безпека', href: '/profile/security' },
   ];

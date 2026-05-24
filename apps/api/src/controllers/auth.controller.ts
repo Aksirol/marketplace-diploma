@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto'; // Вбудований модуль Node.js для генерації токенів
 import { PrismaClient, Role } from '@prisma/client';
 import { redisClient } from '../lib/redis';
+import { mergeCarts } from './cart.controller';
 
 const prisma = new PrismaClient();
 
@@ -109,6 +110,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     const tokens = generateTokens(user.id, user.role);
+
+    // Додаємо злиття кошика після успішного логіну
+    const sessionId = (req as any).sessionId || req.cookies?.session_id;
+    if (sessionId) {
+      await mergeCarts(sessionId, user.id);
+    }
+
     res.status(200).json({ message: 'Вхід успішний', tokens, role: user.role });
   } catch (error) {
     res.status(500).json({ message: 'Помилка сервера під час входу' });

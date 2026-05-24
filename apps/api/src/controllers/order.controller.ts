@@ -5,17 +5,17 @@ import { redisClient } from '../lib/redis';
 
 const prisma = new PrismaClient();
 
-// 1. Zod-схема для валідації форми чекауту
+// 1. Zod-схема для валідації форми чекауту (Виправлено Deprecation Warning)
 const checkoutSchema = z.object({
-  guest_name: z.string().min(2, "Ім'я занадто коротке"),
-  guest_email: z.string().email("Невірний формат e-mail"),
-  guest_phone: z.string().regex(/^\+380\d{9}$/, "Формат телефону має бути +380XXXXXXXXX"),
-  delivery_method: z.string().min(1, "Оберіть спосіб доставки"),
-  payment_method: z.string().min(1, "Оберіть спосіб оплати"),
+  guest_name: z.string().min(2, { message: "Ім'я занадто коротке" }),
+  guest_email: z.string().email({ message: "Невірний формат e-mail" }),
+  guest_phone: z.string().regex(/^\+380\d{9}$/, { message: "Формат телефону має бути +380XXXXXXXXX" }),
+  delivery_method: z.string().min(1, { message: "Оберіть спосіб доставки" }),
+  payment_method: z.string().min(1, { message: "Оберіть спосіб оплати" }),
   address: z.object({
-    city: z.string().min(2, "Вкажіть місто"),
-    street: z.string().min(5, "Вкажіть вулицю або номер відділення"),
-    zip_code: z.string().min(5, "Вкажіть індекс").optional().or(z.literal('')),
+    city: z.string().min(2, { message: "Вкажіть місто" }),
+    street: z.string().min(5, { message: "Вкажіть вулицю або номер відділення" }),
+    zip_code: z.string().min(5, { message: "Вкажіть індекс" }).optional().or(z.literal('')),
   })
 });
 
@@ -28,7 +28,7 @@ const getRedisCart = async (sessionId: string) => {
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
     const sessionId = (req as any).sessionId;
-    
+
     // 2. Валідація вхідних даних через Zod
     const validatedData = checkoutSchema.parse(req.body);
 
@@ -54,7 +54,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       if (!ordersByStore[dbProduct.store_id]) {
         ordersByStore[dbProduct.store_id] = [];
       }
-      
+
       ordersByStore[dbProduct.store_id].push({
         product_id: dbProduct.id,
         quantity: item.quantity,
@@ -63,7 +63,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       });
     }
 
- const createdOrders: Order[] = [];
+    const createdOrders: Order[] = [];
 
     // 6. Використовуємо Prisma Transaction, щоб гарантувати цілісність даних
     await prisma.$transaction(async (tx) => {
@@ -90,7 +90,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
             total_amount: totalAmount,
             status: OrderStatus.NEW,
             payment_status: PaymentStatus.PENDING,
-            
+
             // Зв'язки
             items: {
               create: items.map(i => ({
@@ -118,7 +118,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         }
 
         createdOrders.push(newOrder);
-        
+
         // 7. Mock відправки E-mail (SendGrid)
         console.log(`[SendGrid Mock] Відправлено e-mail на ${validatedData.guest_email}. Номер замовлення: ${newOrder.id}`);
       }
@@ -127,15 +127,15 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     // 8. Очищуємо кошик після успішного оформлення
     await redisClient.del(`cart:${sessionId}`);
 
-    res.status(201).json({ 
-      message: 'Замовлення успішно оформлено', 
-      orders: createdOrders 
+    res.status(201).json({
+      message: 'Замовлення успішно оформлено',
+      orders: createdOrders
     });
 
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       res.status(422).json({ message: 'Помилка валідації', errors: error.issues });
-      return; // <--- ДОДАНО RETURN
+      return;
     } else {
       console.error(error);
       res.status(400).json({ message: error.message || 'Помилка при оформленні замовлення' });
@@ -145,10 +145,10 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 
 export const trackOrder = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params; // Використовуємо ID замовлення як трекінг-номер
+    const id = String(req.params.id); // Використовуємо ID замовлення як трекінг-номер
 
     const order = await prisma.order.findUnique({
-      where: { id: id as string },
+      where: { id },
       include: {
         items: {
           include: { product: { select: { name: true, images: { where: { is_primary: true } } } } }
@@ -176,5 +176,40 @@ export const trackOrder = async (req: Request, res: Response): Promise<void> => 
     });
   } catch (error) {
     res.status(500).json({ message: 'Помилка при отриманні статусу замовлення' });
+  }
+};
+
+export const cancelOrder = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = String((req as any).user.id);
+    const id = String(req.params.id);
+
+    const order = await prisma.order.findUnique({ where: { id } });
+
+    if (!order) {
+      res.status(404).json({ message: 'Замовлення не знайдено' });
+      return;
+    }
+
+    // Безпека: перевіряємо, чи належить замовлення цьому юзеру
+    if (order.buyer_id !== userId) {
+      res.status(403).json({ message: 'Доступ заборонено. Це не ваше замовлення.' });
+      return;
+    }
+
+    // Скасувати можна тільки нові замовлення або ті, що в обробці
+    if (order.status !== 'NEW' && order.status !== 'PROCESSING') {
+      res.status(400).json({ message: `Неможливо скасувати замовлення зі статусом ${order.status}` });
+      return;
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: { status: 'CANCELED' }
+    });
+
+    res.status(200).json({ message: 'Замовлення успішно скасовано', order: updatedOrder });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при скасуванні замовлення' });
   }
 };
