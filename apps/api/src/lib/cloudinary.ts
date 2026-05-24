@@ -14,14 +14,15 @@ const storage = multer.memoryStorage();
 export const uploadMiddleware = multer({
   storage,
   limits: {
-    fileSize: 2 * 1024 * 1024, // Обмеження: максимум 2 МБ для аватара
+    fileSize: 10 * 1024 * 1024, // Максимум 10 МБ (щоб контролер міг сам відловити 5 МБ і видати гарну помилку)
   },
   fileFilter: (req, file, cb) => {
-    // Дозволяємо лише зображення
-    if (file.mimetype.startsWith('image/')) {
+    // Дозволяємо картинки та PDF
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Дозволено завантажувати лише зображення!'));
+      cb(new Error('Недопустимий формат файлу. Дозволені: JPG, PNG, PDF.'));
     }
   },
 });

@@ -6,6 +6,7 @@ import cartRoutes from './routes/cart.routes';
 import orderRoutes from './routes/order.routes';
 import userRoutes from './routes/user.routes';
 import reviewRoutes from './routes/review.routes';
+import storeRoutes from './routes/store.routes';
 
 export const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/stores', storeRoutes);
 
 // Оновлений Health-check ендпоінт, що повертає версію
 app.get('/api/health', (req: Request, res: Response) => {
