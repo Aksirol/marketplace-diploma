@@ -9,8 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: '#3C3489', // Основний колір кнопок з Design System
+          hover: '#26215C',   // Колір при наведенні
+        },
+        secondary: '#EEEDFE', // Світлий акцентний фон
+        danger: '#D85A30',
+        success: '#0F6E56',
       },
     },
   },

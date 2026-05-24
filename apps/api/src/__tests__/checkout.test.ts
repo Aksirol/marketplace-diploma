@@ -19,6 +19,9 @@ describe('Checkout & Order Flow', () => {
   beforeAll(async () => {
     if (!redisClient.isOpen) await redisClient.connect();
 
+    // ОЧИЩАЄМО REDIS ВІД СТАРИХ ТЕСТІВ
+    await redisClient.flushAll();
+
     // Підготовка тестових даних
     const user = await prisma.user.create({ data: { email: `checkout-${Date.now()}@test.com`, role: Role.PRODUCER } });
     userId = user.id;
@@ -42,10 +45,11 @@ describe('Checkout & Order Flow', () => {
   });
 
   afterAll(async () => {
-    // Очищення бази даних (дотримуємося порядку через зовнішні ключі)
     await prisma.orderItem.deleteMany({ where: { product_id: productId } });
-    await prisma.orderAddress.deleteMany();
-    if (createdOrderId) await prisma.order.delete({ where: { id: createdOrderId } });
+    if (createdOrderId) {
+      await prisma.orderAddress.deleteMany({ where: { order_id: createdOrderId } }); // <--- ДОДАНО WHERE
+      await prisma.order.delete({ where: { id: createdOrderId } });
+    }
     
     await prisma.product.deleteMany({ where: { store_id: storeId } });
     await prisma.store.deleteMany({ where: { id: storeId } });

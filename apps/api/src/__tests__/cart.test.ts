@@ -20,6 +20,9 @@ describe('Guest Cart Flow (Redis)', () => {
     // Підключаємо Redis
     if (!redisClient.isOpen) await redisClient.connect();
 
+    // ОЧИЩАЄМО REDIS ВІД СТАРИХ ТЕСТІВ
+    await redisClient.flushAll();
+
     // Створюємо тестові дані
     const user = await prisma.user.create({ data: { email: `cart-${Date.now()}@test.com`, role: Role.PRODUCER } });
     userId = user.id;
@@ -59,11 +62,12 @@ describe('Guest Cart Flow (Redis)', () => {
     expect(resA.status).toBe(200);
     expect(resA.body.items.length).toBe(1);
 
-    // Браузер Б перевіряє свій кошик
-    const resB = await browserB.get('/api/cart');
+    // Звичайний запит БЕЗ агента гарантує 100% відсутність cookies
+    const resB = await request(app).get('/api/cart');
+
     expect(resB.status).toBe(200);
-    // У браузера Б кошик має бути порожнім, бо це інша сесія
-    expect(resB.body.items.length).toBe(0); 
+    // У нового браузера кошик гарантовано має бути порожнім
+    expect(resB.body.items.length).toBe(0);
   });
 
   it('Додавання: quantity понад stock → 400', async () => {

@@ -55,15 +55,14 @@ describe('Search & Filtering Flow', () => {
   });
 
   afterAll(async () => {
-    // Очищуємо ТІЛЬКИ свої дані, щоб не зламати інші паралельні тести
+    // Видаляємо ТІЛЬКИ ті дані, які створив цей тест, щоб не ламати інші
     await prisma.product.deleteMany({ where: { store_id: { in: [storeFrankivskId, storeLvivId] } } });
     await prisma.store.deleteMany({ where: { id: { in: [storeFrankivskId, storeLvivId] } } });
     await prisma.category.deleteMany({ where: { id: { in: [honeyCategoryId, cheeseCategoryId] } } });
-    // Тут ми видаляємо користувачів не за email (бо ми додали Date.now), а за їх зв'язками, 
-    // але найпростіше просто залишити їх в базі для тестів, або видалити так:
-    await prisma.user.deleteMany({ where: { id: { in: [user1Id, user2Id] } } });
     
-    // Закриваємо з'єднання
+    // Видаляємо лише тестових виробників (prod1, prod2...)
+    await prisma.user.deleteMany({ where: { email: { startsWith: 'prod' } } });
+    
     await prisma.$disconnect();
     if (redisClient.isOpen) await redisClient.quit();
   });

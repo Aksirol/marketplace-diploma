@@ -94,7 +94,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
             // Зв'язки
             items: {
               create: items.map(i => ({
-                product_id: i.product_id,
+                product: { connect: { id: i.product_id } }, // Явно з'єднуємо з існуючим товаром
                 quantity: i.quantity,
                 unit_price: i.unit_price
               }))
@@ -135,11 +135,13 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       res.status(422).json({ message: 'Помилка валідації', errors: error.issues });
-    }
+      return; // <--- ДОДАНО RETURN
+    } else {
       console.error(error);
       res.status(400).json({ message: error.message || 'Помилка при оформленні замовлення' });
     }
-  };
+  }
+};
 
 export const trackOrder = async (req: Request, res: Response): Promise<void> => {
   try {

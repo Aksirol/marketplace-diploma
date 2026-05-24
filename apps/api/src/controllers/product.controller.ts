@@ -51,10 +51,7 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
     let orderByClause: Prisma.ProductOrderByWithRelationInput = { created_at: 'desc' }; // newest за замовчуванням
     if (sort === 'price_asc') orderByClause = { price: 'asc' };
     if (sort === 'price_desc') orderByClause = { price: 'desc' };
-    if (sort === 'rating') {
-      // Сортування за середнім рейтингом з таблиці Reviews
-      orderByClause = { reviews: { _count: 'desc' } };
-    }
+    if (sort === 'rating') orderByClause = { average_rating: 'desc' };
 
     // 4. Виконуємо запит до БД
     const products = await prisma.product.findMany({
@@ -88,7 +85,7 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const product = await prisma.product.findUnique({
-      where: { id: id as string },
+      where: { id: id as string, status: ProductStatus.ACTIVE },
       include: {
         images: { orderBy: { sort_order: 'asc' } },
         store: { select: { id: true, name: true, logo_url: true, location: true } },

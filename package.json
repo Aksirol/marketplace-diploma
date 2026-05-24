@@ -9,7 +9,12 @@
     "dev:api": "npm run dev --workspace=apps/api"
   },
   "dependencies": {
-    "@prisma/client": "6.0.0",
-    "prisma": "6.0.0"
+    "@prisma/client": "^6.0.0"
+  },
+  "devDependencies": {
+    "@prisma/language-server": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/parser": "^8.59.4",
+    "prisma": "^6.0.0"
   }
 }

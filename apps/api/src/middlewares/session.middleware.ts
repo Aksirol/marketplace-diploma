@@ -1,21 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto'; // Використовуємо надійний вбудований модуль Node.js
 
 export const sessionMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  // Шукаємо session_id в cookies
   let sessionId = req.cookies?.session_id;
 
-  // Якщо немає — генеруємо новий і встановлюємо cookie
-  if (!sessionId) {
-    sessionId = uuidv4();
+  // Захист: якщо cookie немає АБО вона має помилковий текст 'undefined'
+  if (!sessionId || sessionId === 'undefined') {
+    sessionId = crypto.randomUUID();
     res.cookie('session_id', sessionId, {
-      httpOnly: true, // Захист від XSS
-      maxAge: 24 * 60 * 60 * 1000, // 24 години в мілісекундах
-      sameSite: 'lax', // Дозволяє відправляти cookie між фронтом і беком на localhost
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
     });
   }
 
-  // Зберігаємо sessionId в об'єкті запиту для контролера
   (req as any).sessionId = sessionId;
   next();
 };
