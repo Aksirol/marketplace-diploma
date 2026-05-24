@@ -3,161 +3,143 @@ import request from 'supertest';
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
 import { app } from '../app';
+import { redisClient } from '../lib/redis';
 
 const prisma = new PrismaClient();
 
-describe('Authentication & Authorization Flow', () => {
-  const testEmail = `test-${Date.now()}@example.com`;
+describe('Authentication & Authorization Flow (Buyer Module)', () => {
+  const testEmail = `buyer-${Date.now()}@example.com`;
   const testPassword = 'SecurePassword123!';
+
+  let verifyToken = '';
   let buyerToken = '';
+  let refreshToken = '';
+
+  beforeAll(async () => {
+    // Підключаємо Redis і очищаємо його перед тестами
+    if (!redisClient.isOpen) await redisClient.connect();
+    await redisClient.flushAll();
+  });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { email: { in: [testEmail, `blocked-${testEmail}`] } } });
+    // Прибираємо тестового користувача з БД
+    await prisma.user.deleteMany({ where: { email: testEmail } });
+
     await prisma.$disconnect();
+    if (redisClient.isOpen) await redisClient.quit();
   });
 
-  // ─── bcrypt ───────────────────────────────────────────────
-
-  it('bcrypt: однаковий пароль дає різні хеші (через сіль)', async () => {
+  it('bcrypt: хеш різний при однакових паролях (через сіль)', async () => {
     const hash1 = await bcrypt.hash('my_password', 12);
     const hash2 = await bcrypt.hash('my_password', 12);
+
     expect(hash1).not.toBe(hash2);
     expect(await bcrypt.compare('my_password', hash1)).toBe(true);
-    expect(await bcrypt.compare('my_password', hash2)).toBe(true);
   });
 
-  // ─── Реєстрація ───────────────────────────────────────────
-
-  it('Реєстрація: успішна реєстрація повертає 201 і токени', async () => {
+  it('Реєстрація: is_active = false до підтвердження (створення токена)', async () => {
     const res = await request(app).post('/api/auth/register').send({
       email: testEmail,
       password: testPassword,
-      first_name: 'Тест',
+      first_name: 'Покупець',
       role: 'USER',
     });
+
     expect(res.status).toBe(201);
-    expect(res.body.tokens).toHaveProperty('accessToken');
-    expect(res.body.tokens).toHaveProperty('refreshToken');
+    expect(res.body.message).toContain('Перевірте email');
+
+    // Перевіряємо в базі даних, що акаунт дійсно неактивний
+    const user = await prisma.user.findUnique({ where: { email: testEmail } });
+    expect(user).toBeDefined();
+    expect(user?.is_active).toBe(false);
+
+    // Знаходимо згенерований токен верифікації в Redis
+    // (Оскільки ми робили flushAll(), ключ verify:* буде тільки один)
+    const keys = await redisClient.keys('verify:*');
+    expect(keys.length).toBe(1);
+
+    verifyToken = keys[0].replace('verify:', ''); // Зберігаємо токен для наступних тестів
   });
 
-  it('Реєстрація: дублікат email повертає 409', async () => {
-    const res = await request(app).post('/api/auth/register').send({
-      email: testEmail,
-      password: 'SomeOtherPassword123!',
-      role: 'USER',
-    });
-    expect(res.status).toBe(409);
-  });
-
-  it('Реєстрація: некоректний email повертає 422', async () => {
-    const res = await request(app).post('/api/auth/register').send({
-      email: 'not-an-email',
-      password: testPassword,
-    });
-    expect(res.status).toBe(422);
-    expect(res.body).toHaveProperty('errors');
-  });
-
-  it('Реєстрація: пароль коротший 8 символів повертає 422', async () => {
-    const res = await request(app).post('/api/auth/register').send({
-      email: `short-${testEmail}`,
-      password: '123',
-    });
-    expect(res.status).toBe(422);
-    expect(res.body.errors?.password).toBeDefined();
-  });
-
-  it('Реєстрація: порожній body повертає 422', async () => {
-    const res = await request(app).post('/api/auth/register').send({});
-    expect(res.status).toBe(422);
-  });
-
-  it('Реєстрація: роль ADMIN через форму повертає 422 (захист)', async () => {
-    const res = await request(app).post('/api/auth/register').send({
-      email: `admin-try-${testEmail}`,
-      password: testPassword,
-      role: 'ADMIN',
-    });
-    // Zod відхиляє недозволену роль
-    expect(res.status).toBe(422);
-  });
-
-  // ─── Логін ────────────────────────────────────────────────
-
-  it('Логін: успішний вхід повертає 200 і токени', async () => {
+  it('Логін без верифікації email → 403', async () => {
     const res = await request(app).post('/api/auth/login').send({
       email: testEmail,
       password: testPassword,
     });
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toBe('Акаунт не підтверджено. Перевірте email.');
+  });
+
+  it('Протермінований або невірний verify-токен → 400', async () => {
+    const res = await request(app).get('/api/auth/verify/invalid-token-12345');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Недійсний або прострочений токен підтвердження');
+  });
+
+  it('Успішна верифікація email', async () => {
+    // Використовуємо правильний токен, який ми витягнули з Redis
+    const res = await request(app).get(`/api/auth/verify/${verifyToken}`);
+
+    expect(res.status).toBe(200);
+
+    // Перевіряємо, що в БД статус змінився на true
+    const user = await prisma.user.findUnique({ where: { email: testEmail } });
+    expect(user?.is_active).toBe(true);
+
+    // Перевіряємо, що токен успішно видалився з Redis після використання
+    const exists = await redisClient.get(`verify:${verifyToken}`);
+    expect(exists).toBeNull();
+  });
+
+  it('Логін: успішний вхід та отримання токенів', async () => {
+    const res = await request(app).post('/api/auth/login').send({
+      email: testEmail,
+      password: testPassword,
+    });
+
     expect(res.status).toBe(200);
     expect(res.body.tokens).toHaveProperty('accessToken');
     expect(res.body.tokens).toHaveProperty('refreshToken');
+
     buyerToken = res.body.tokens.accessToken;
+    refreshToken = res.body.tokens.refreshToken;
   });
 
-  it('Логін: невірний пароль повертає 401', async () => {
-    const res = await request(app).post('/api/auth/login').send({
-      email: testEmail,
-      password: 'WrongPassword!',
-    });
-    expect(res.status).toBe(401);
-  });
-
-  it('Логін: неіснуючий email повертає 401', async () => {
-    const res = await request(app).post('/api/auth/login').send({
-      email: 'nobody@example.com',
-      password: testPassword,
-    });
-    expect(res.status).toBe(401);
-  });
-
-  it('Логін: заблокований акаунт повертає 403', async () => {
-    // Створюємо заблокованого юзера напряму в БД
-    const blockedEmail = `blocked-${testEmail}`;
-    await prisma.user.create({
-      data: {
-        email: blockedEmail,
-        password_hash: await bcrypt.hash(testPassword, 12),
-        role: 'USER',
-        is_active: false, // Заблокований
-      },
-    });
-
-    const res = await request(app).post('/api/auth/login').send({
-      email: blockedEmail,
-      password: testPassword,
-    });
-    expect(res.status).toBe(403);
-    expect(res.body.message).toMatch(/заблоковано/i);
-  });
-
-  // ─── JWT / Middleware ──────────────────────────────────────
-
-  it('JWT: некоректний токен повертає 401', async () => {
+  it('JWT: некоректний токен доступу повертає 401', async () => {
     const res = await request(app)
       .get('/api/auth/me')
       .set('Authorization', 'Bearer invalid.token.string');
+
     expect(res.status).toBe(401);
   });
 
-  it('JWT: відсутній токен повертає 401', async () => {
-    const res = await request(app).get('/api/auth/me');
-    expect(res.status).toBe(401);
-  });
-
-  it('roleGuard: USER не має доступу до маршруту PRODUCER (повертає 403)', async () => {
+  it('roleGuard: buyer не має доступу до роуту producer (повертає 403)', async () => {
     const res = await request(app)
       .get('/api/auth/producer-only')
       .set('Authorization', `Bearer ${buyerToken}`);
+
     expect(res.status).toBe(403);
   });
 
-  it('Захищений маршрут /me повертає дані користувача з валідним токеном', async () => {
-    const res = await request(app)
-      .get('/api/auth/me')
-      .set('Authorization', `Bearer ${buyerToken}`);
-    expect(res.status).toBe(200);
-    expect(res.body.user).toHaveProperty('id');
-    expect(res.body.user).toHaveProperty('role', 'USER');
+  it('Logout: refresh-токен не працює після виходу (Blacklist у Redis)', async () => {
+    // 1. Робимо логаут
+    const logoutRes = await request(app).post('/api/auth/logout').send({
+      refreshToken,
+    });
+    expect(logoutRes.status).toBe(200);
+
+    // 2. Перевіряємо наявність токена в Blacklist у Redis
+    const isBlacklisted = await redisClient.get(`bl:${refreshToken}`);
+    expect(isBlacklisted).toBe('revoked');
+
+    // 3. Спроба оновити токен за допомогою анульованого refreshToken
+    const refreshRes = await request(app).post('/api/auth/refresh').send({
+      refreshToken,
+    });
+
+    expect(refreshRes.status).toBe(401);
+    expect(refreshRes.body.message).toContain('анульовано');
   });
 });

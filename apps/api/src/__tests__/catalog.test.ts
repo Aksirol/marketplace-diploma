@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { PrismaClient, Role, StoreStatus } from '@prisma/client';
 import { app } from '../app';
+import { redisClient } from '../lib/redis';
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,9 @@ describe('Catalog & Guest Flow', () => {
 
   // Перед початком тестів створюємо тестові дані в базі
   beforeAll(async () => {
+
+    if (!redisClient.isOpen) await redisClient.connect();
+    await redisClient.flushAll();
     // 1. Створюємо користувача-виробника
     const user = await prisma.user.create({
       data: {
@@ -82,6 +86,8 @@ describe('Catalog & Guest Flow', () => {
     await prisma.store.deleteMany({ where: { id: storeId } });
     await prisma.user.deleteMany({ where: { id: userId } });
     await prisma.$disconnect();
+
+    if (redisClient.isOpen) await redisClient.quit();
   });
 
   it('GET /api/categories: повертає дерево категорій (рекурсія)', async () => {

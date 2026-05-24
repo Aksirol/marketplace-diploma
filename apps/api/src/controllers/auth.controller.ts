@@ -1,63 +1,15 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { z } from 'zod';
+import crypto from 'crypto'; // Вбудований модуль Node.js для генерації токенів
 import { PrismaClient, Role } from '@prisma/client';
+import { redisClient } from '../lib/redis';
 
 const prisma = new PrismaClient();
 
-// ==================== СХЕМИ ВАЛІДАЦІЇ (Zod v4) ====================
-// Zod v4: API параметр error замість required_error
-// Рядки з апострофом (обов'язковий) — використовуємо подвійні лапки
-
-const RegisterSchema = z.object({
-  email: z
-    .string({ error: "Email обов'язковий" })
-    .email("Невірний формат email")
-    .toLowerCase(),
-  password: z
-    .string({ error: "Пароль обов'язковий" })
-    .min(8, "Пароль повинен містити мінімум 8 символів")
-    .max(72, "Пароль занадто довгий"),
-  first_name: z
-    .string()
-    .min(2, "Ім'я повинно містити мінімум 2 символи")
-    .max(50, "Ім'я занадто довге")
-    .optional(),
-  last_name: z
-    .string()
-    .max(50, "Прізвище занадто довге")
-    .optional(),
-  // Лише USER або PRODUCER — адміна через форму не створити
-  role: z.enum([Role.USER, Role.PRODUCER]).default(Role.USER),
-});
-
-const LoginSchema = z.object({
-  email: z
-    .string({ error: "Email обов'язковий" })
-    .email("Невірний формат email")
-    .toLowerCase(),
-  password: z
-    .string({ error: "Пароль обов'язковий" })
-    .min(1, "Пароль не може бути порожнім"),
-});
-
-const RefreshSchema = z.object({
-  refreshToken: z
-    .string({ error: "Refresh token обов'язковий" })
-    .min(1, "Refresh token не може бути порожнім"),
-});
-
-// ==================== ДОПОМІЖНІ ФУНКЦІЇ ====================
-
 const generateTokens = (userId: string, role: Role) => {
-  const accessSecret = process.env.JWT_ACCESS_SECRET;
-  const refreshSecret = process.env.JWT_REFRESH_SECRET;
-
-  // Падаємо голосно — краще помилка при старті, ніж тихий 'secret' у проді
-  if (!accessSecret || !refreshSecret) {
-    throw new Error("JWT_ACCESS_SECRET та JWT_REFRESH_SECRET мають бути задані в .env");
-  }
+  const accessSecret = process.env.JWT_ACCESS_SECRET || 'secret';
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || 'secret';
 
   const accessToken = jwt.sign({ id: userId, role }, accessSecret, { expiresIn: '15m' });
   const refreshToken = jwt.sign({ id: userId, role }, refreshSecret, { expiresIn: '7d' });
@@ -65,107 +17,195 @@ const generateTokens = (userId: string, role: Role) => {
   return { accessToken, refreshToken };
 };
 
-// ==================== КОНТРОЛЕРИ ====================
-
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const parsed = RegisterSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(422).json({
-        message: "Помилка валідації",
-        errors: parsed.error.flatten().fieldErrors,
-      });
-      return;
-    }
-
-    const { email, password, first_name, last_name, role } = parsed.data;
+    const { email, password, first_name, last_name, role } = req.body;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      res.status(409).json({ message: "Користувач з таким email вже існує" });
+      res.status(409).json({ message: 'Користувач з таким email вже існує' });
       return;
     }
 
-    const password_hash = await bcrypt.hash(password, 12);
+    const saltRounds = 12;
+    const password_hash = await bcrypt.hash(password, saltRounds);
+
+    // Роль BUYER у нашій системі відповідає Role.USER
+    const assignedRole = role === Role.PRODUCER ? Role.PRODUCER : Role.USER;
 
     const newUser = await prisma.user.create({
-      data: { email, password_hash, first_name, last_name, role },
+      data: {
+        email,
+        password_hash,
+        first_name,
+        last_name,
+        role: assignedRole,
+        is_active: false, // Акаунт неактивний до підтвердження email
+      },
     });
 
-    const tokens = generateTokens(newUser.id, newUser.role);
-    res.status(201).json({ message: "Реєстрація успішна", tokens, role: newUser.role });
+    // Генерація токену підтвердження та збереження в Redis (TTL 24 години)
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    await redisClient.setEx(`verify:${verifyToken}`, 24 * 60 * 60, newUser.id);
+
+    // Mock відправки Email (SendGrid)
+    console.log(`[Email Mock] Підтвердження email для ${email}: http://localhost:3000/verify/${verifyToken}`);
+
+    res.status(201).json({
+      message: 'Реєстрація успішна. Перевірте email для підтвердження акаунту.',
+      role: newUser.role
+    });
   } catch (error) {
-    console.error('[register]', error);
-    res.status(500).json({ message: "Помилка сервера під час реєстрації" });
+    res.status(500).json({ message: 'Помилка сервера під час реєстрації' });
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.params;
+
+    // Шукаємо токен у Redis
+    const userId = await redisClient.get(`verify:${token}`);
+    if (!userId) {
+      res.status(400).json({ message: 'Недійсний або прострочений токен підтвердження' });
+      return;
+    }
+
+    // Активуємо користувача
+    await prisma.user.update({
+      where: { id: userId },
+      data: { is_active: true }
+    });
+
+    // Видаляємо токен з Redis
+    await redisClient.del(`verify:${token}`);
+
+    res.status(200).json({ message: 'Email успішно підтверджено. Тепер ви можете увійти.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при підтвердженні email' });
   }
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const parsed = LoginSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(422).json({
-        message: "Помилка валідації",
-        errors: parsed.error.flatten().fieldErrors,
-      });
-      return;
-    }
-
-    const { email, password } = parsed.data;
+    const { email, password } = req.body;
 
     const user = await prisma.user.findUnique({ where: { email } });
-
-    // Умисно не розрізняємо "email не знайдено" і "пароль невірний"
     if (!user || !user.password_hash) {
-      res.status(401).json({ message: "Невірний email або пароль" });
+      res.status(401).json({ message: 'Невірний email або пароль' });
       return;
     }
 
-    // Перевірка блокування — до bcrypt.compare, щоб не витрачати CPU
+    // Перевірка, чи підтвердив користувач email
     if (!user.is_active) {
-      res.status(403).json({ message: "Акаунт заблоковано. Зверніться до служби підтримки." });
+      res.status(403).json({ message: 'Акаунт не підтверджено. Перевірте email.' });
       return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
-      res.status(401).json({ message: "Невірний email або пароль" });
+      res.status(401).json({ message: 'Невірний email або пароль' });
       return;
     }
 
     const tokens = generateTokens(user.id, user.role);
-    res.status(200).json({ message: "Вхід успішний", tokens, role: user.role });
+    res.status(200).json({ message: 'Вхід успішний', tokens, role: user.role });
   } catch (error) {
-    console.error('[login]', error);
-    res.status(500).json({ message: "Помилка сервера під час входу" });
+    res.status(500).json({ message: 'Помилка сервера під час входу' });
   }
 };
 
 export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
-    const parsed = RefreshSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(401).json({ message: "Refresh token відсутній або невірний формат" });
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(401).json({ message: 'Refresh token відсутній' });
       return;
     }
 
-    const refreshSecret = process.env.JWT_REFRESH_SECRET;
-    if (!refreshSecret) {
-      throw new Error("JWT_REFRESH_SECRET не задано в .env");
-    }
-
-    const decoded = jwt.verify(parsed.data.refreshToken, refreshSecret) as { id: string; role: Role };
-
-    // Перевіряємо актуальний стан — юзер міг бути заблокований після видачі токена
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-    if (!user || !user.is_active) {
-      res.status(403).json({ message: "Акаунт не знайдено або заблоковано" });
+    // ПЕРЕВІРКА: Чи не був цей токен анульований (logout)
+    const isBlacklisted = await redisClient.get(`bl:${refreshToken}`);
+    if (isBlacklisted) {
+      res.status(401).json({ message: 'Цей токен було анульовано. Будь ласка, увійдіть знову.' });
       return;
     }
 
-    const tokens = generateTokens(user.id, user.role);
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || 'secret';
+    const decoded = jwt.verify(refreshToken, refreshSecret) as { id: string; role: Role };
+
+    const tokens = generateTokens(decoded.id, decoded.role);
     res.status(200).json({ tokens });
   } catch (error) {
-    res.status(403).json({ message: "Недійсний або прострочений refresh token" });
+    res.status(403).json({ message: 'Недійсний refresh token' });
+  }
+};
+
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      res.status(400).json({ message: 'Токен відсутній' });
+      return;
+    }
+
+    // Декодуємо токен, щоб дізнатися, коли він закінчується (exp)
+    const decoded = jwt.decode(refreshToken) as any;
+    if (decoded && decoded.exp) {
+      const expiresInSeconds = decoded.exp - Math.floor(Date.now() / 1000);
+
+      if (expiresInSeconds > 0) {
+        // Додаємо в Blacklist у Redis на час, що залишився до його смерті
+        await redisClient.setEx(`bl:${refreshToken}`, expiresInSeconds, 'revoked');
+      }
+    }
+
+    res.status(200).json({ message: 'Ви успішно вийшли з системи' });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при виході' });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // З міркувань безпеки ми не повідомляємо, чи існує email, але генеруємо лог тільки якщо він є
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      await redisClient.setEx(`reset:${resetToken}`, 15 * 60, user.id); // TTL 15 хвилин
+
+      console.log(`[Email Mock] Відновлення паролю для ${email}: http://localhost:3000/reset-password?token=${resetToken}`);
+    }
+
+    res.status(200).json({ message: 'Якщо цей email зареєстровано, ми надіслали інструкції з відновлення.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при запиті на відновлення' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const userId = await redisClient.get(`reset:${token}`);
+    if (!userId) {
+      res.status(400).json({ message: 'Недійсний або прострочений токен відновлення' });
+      return;
+    }
+
+    const password_hash = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password_hash }
+    });
+
+    await redisClient.del(`reset:${token}`);
+
+    res.status(200).json({ message: 'Пароль успішно змінено. Тепер ви можете увійти.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Помилка при скиданні пароля' });
   }
 };
