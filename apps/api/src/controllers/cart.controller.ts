@@ -45,16 +45,26 @@ export const mergeCarts = async (sessionId: string, userId: string): Promise<voi
   guestCart.items.forEach((guestItem: any) => {
     const existingItem = userCart.items.find((i: any) => i.productId === guestItem.productId);
     if (existingItem) {
-      // Якщо товар вже є в кошику юзера, СУМУЄМО кількість
       existingItem.quantity += guestItem.quantity;
     } else {
       userCart.items.push(guestItem);
     }
   });
 
-  // Зберігаємо об'єднаний кошик для користувача (на 7 днів)
+  // ДОДАНО: Перевірка та обрізка кількості до наявної на складі
+  const productIds = userCart.items.map((i: any) => i.productId);
+  const dbProducts = await prisma.product.findMany({
+    where: { id: { in: productIds } }
+  });
+
+  userCart.items.forEach((item: any) => {
+    const dbProduct = dbProducts.find((p: any) => p.id === item.productId);
+    if (dbProduct && item.quantity > dbProduct.stock_qty) {
+      item.quantity = dbProduct.stock_qty; // Не даємо замовити більше, ніж є
+    }
+  });
+
   await redisClient.setEx(`cart:${userId}`, 7 * 24 * 60 * 60, JSON.stringify(userCart));
-  // Видаляємо гостьовий кошик
   await redisClient.del(`cart:${sessionId}`);
 };
 

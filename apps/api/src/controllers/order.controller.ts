@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { PrismaClient, OrderStatus, PaymentStatus, Order } from '@prisma/client';
 import { z } from 'zod';
 import { redisClient } from '../lib/redis';
+import jwt from 'jsonwebtoken';
+import { getCartId } from './cart.controller';
 
 const prisma = new PrismaClient();
 
@@ -27,13 +29,23 @@ const getRedisCart = async (sessionId: string) => {
 
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req as any).sessionId;
+    // Витягуємо userId з токена, якщо користувач авторизований
+    let userId: string | null = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'secret') as any;
+        if (decoded && decoded.id) userId = decoded.id;
+      } catch (e) {}
+    } else if ((req as any).user) {
+      userId = (req as any).user.id;
+    }
 
-    // 2. Валідація вхідних даних через Zod
+    const cartId = getCartId(req); // <-- Використовуємо універсальний хелпер замість sessionId
     const validatedData = checkoutSchema.parse(req.body);
 
-    // 3. Отримуємо кошик
-    const cart = await getRedisCart(sessionId);
+    const cart = await getRedisCart(cartId);
     if (!cart.items || cart.items.length === 0) {
       res.status(400).json({ message: 'Кошик порожній' });
       return;
@@ -81,6 +93,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         // Створюємо замовлення
         const newOrder = await tx.order.create({
           data: {
+            buyer_id: userId, // <--- ТЕПЕР ЗАМОВЛЕННЯ ПРИВ'ЯЗАНО ДО ЮЗЕРА
             store_id: storeId,
             guest_name: validatedData.guest_name,
             guest_email: validatedData.guest_email,
@@ -125,7 +138,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     });
 
     // 8. Очищуємо кошик після успішного оформлення
-    await redisClient.del(`cart:${sessionId}`);
+    await redisClient.del(`cart:${cartId}`);
 
     res.status(201).json({
       message: 'Замовлення успішно оформлено',

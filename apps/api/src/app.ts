@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import authRoutes from './routes/auth.routes';
 import catalogRoutes from './routes/catalog.routes';
-import { connectRedis } from './lib/redis';
 import cookieParser from 'cookie-parser';
 import cartRoutes from './routes/cart.routes';
 import orderRoutes from './routes/order.routes';

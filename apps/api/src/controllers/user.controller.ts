@@ -14,8 +14,8 @@ const updateProfileSchema = z.object({
 });
 
 const changePasswordSchema = z.object({
-  oldPassword: z.string().min(1, { message: "Введіть старий пароль" }),
-  newPassword: z.string().min(6, { message: "Новий пароль має бути не менше 6 символів" }),
+  oldPassword: z.string().min(1, "Введіть старий пароль"),
+  newPassword: z.string().min(8, "Новий пароль має бути не менше 8 символів"), // <-- Було 6, стало 8
 });
 
 const addressSchema = z.object({

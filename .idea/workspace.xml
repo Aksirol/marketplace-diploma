@@ -4,13 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="phase 3.3">
-      <change afterPath="$PROJECT_DIR$/apps/api/src/__tests__/review.test.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/controllers/review.controller.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/routes/review.routes.ts" afterDir="false" />
+    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="phase 3.4">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/api/src/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/app.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/app/profile/orders/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/profile/orders/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/cart.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/cart.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/order.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/order.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/user.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/user.controller.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +105,7 @@
       <option name="presentableId" value="Default" />
       <updated>1779616967701</updated>
       <workItem from="1779616969776" duration="3083000" />
-      <workItem from="1779620096658" duration="8348000" />
+      <workItem from="1779620096658" duration="9903000" />
     </task>
     <task id="LOCAL-00001" summary="phase 2.4 frontned and fixes">
       <option name="closed" value="true" />
@@ -147,7 +147,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779630283614</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="phase 3.4">
+      <option name="closed" value="true" />
+      <created>1779636787190</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1779636787190</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -170,6 +178,7 @@
     <MESSAGE value="phase 3.1" />
     <MESSAGE value="phase 3.2" />
     <MESSAGE value="phase 3.3" />
-    <option name="LAST_COMMIT_MESSAGE" value="phase 3.3" />
+    <MESSAGE value="phase 3.4" />
+    <option name="LAST_COMMIT_MESSAGE" value="phase 3.4" />
   </component>
 </project>
