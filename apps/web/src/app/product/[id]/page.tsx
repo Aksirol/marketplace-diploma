@@ -2,7 +2,8 @@ import Link from 'next/link';
 import AddToCartButton from '@/components/AddToCartButton';
 
 async function getProduct(id: string) {
-  const res = await fetch(`http://api:4000/api/products/${id}`, { cache: 'no-store' });
+  const baseUrl = process.env.API_INTERNAL_URL || 'http://localhost:4000';
+  const res = await fetch(`${baseUrl}/api/products/${id}`, { cache: 'no-store' });
   if (!res.ok) return null;
   return res.json();
 }

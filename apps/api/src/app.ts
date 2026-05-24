@@ -6,8 +6,6 @@ import cookieParser from 'cookie-parser';
 import cartRoutes from './routes/cart.routes';
 import orderRoutes from './routes/order.routes';
 
-connectRedis()
-
 export const app = express();
 
 app.use(express.json());

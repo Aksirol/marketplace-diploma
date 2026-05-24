@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
 async function getStore(id: string) {
-  const res = await fetch(`http://api:4000/api/stores/${id}`, { cache: 'no-store' });
+  const baseUrl = process.env.API_INTERNAL_URL || 'http://localhost:4000';
+  const res = await fetch(`${baseUrl}/api/products/${id}`, { cache: 'no-store' });
   if (!res.ok) return null;
   return res.json();
 }

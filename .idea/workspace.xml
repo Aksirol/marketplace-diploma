@@ -4,35 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/marketplace-diploma.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/components/AddToCartButton.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/global.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/prisma/schema.prisma" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/__tests__/cart.test.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/__tests__/cart.test.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/__tests__/checkout.test.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/__tests__/checkout.test.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/__tests__/search.test.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/__tests__/search.test.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/cart.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/cart.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/order.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/order.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/product.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/product.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/middlewares/session.middleware.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/middlewares/session.middleware.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/app/catalog/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/catalog/page.tsx" afterDir="false" />
+    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="phase 2.4 frontned and fixes">
+      <change afterPath="$PROJECT_DIR$/apps/api/prisma/migrations/20260524095627_add_avg_rating/migration.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/app.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/web/src/app/product/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/product/[id]/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/web/src/app/store/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/store/[id]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/components/FilterBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/components/FilterBar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/tailwind.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/tailwind.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nginx/nginx.conf" beforeDir="false" afterPath="$PROJECT_DIR$/nginx/nginx.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +44,7 @@
     <option name="lspServerPackageName" value="C:\Users\Admin\Desktop\Dyplom\Bilous\marketplace-diploma\node_modules\@prisma\language-server" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -126,8 +103,17 @@
       <option name="presentableId" value="Default" />
       <updated>1779616967701</updated>
       <workItem from="1779616969776" duration="3083000" />
-      <workItem from="1779620096658" duration="148000" />
+      <workItem from="1779620096658" duration="518000" />
     </task>
+    <task id="LOCAL-00001" summary="phase 2.4 frontned and fixes">
+      <option name="closed" value="true" />
+      <created>1779620353502</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1779620353502</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -143,5 +129,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="phase 2.4 frontned and fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="phase 2.4 frontned and fixes" />
   </component>
 </project>
