@@ -4,16 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="phase 3.4 final">
-      <change afterPath="$PROJECT_DIR$/apps/api/src/__tests__/store.test.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/api/src/routes/store.routes.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/app/seller/layout.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/app/seller/profile/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/web/src/app/seller/register/page.tsx" afterDir="false" />
+    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="phase 4.1">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apps/api/src/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/app.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/store.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/store.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/lib/cloudinary.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/lib/cloudinary.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/product.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/product.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/routes/catalog.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/routes/catalog.routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +27,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -109,6 +106,9 @@
       <updated>1779616967701</updated>
       <workItem from="1779616969776" duration="3083000" />
       <workItem from="1779620096658" duration="10677000" />
+      <workItem from="1779964524860" duration="18000" />
+      <workItem from="1779979713522" duration="488000" />
+      <workItem from="1780296806739" duration="4524000" />
     </task>
     <task id="LOCAL-00001" summary="phase 2.4 frontned and fixes">
       <option name="closed" value="true" />

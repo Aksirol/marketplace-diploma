@@ -7,6 +7,7 @@ import orderRoutes from './routes/order.routes';
 import userRoutes from './routes/user.routes';
 import reviewRoutes from './routes/review.routes';
 import storeRoutes from './routes/store.routes';
+import productRoutes from './routes/product.routes';
 
 export const app = express();
 
@@ -15,6 +16,7 @@ app.use(cookieParser());
 
 // Підключаємо маршрути авторизації
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
