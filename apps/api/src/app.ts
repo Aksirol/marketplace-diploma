@@ -16,8 +16,8 @@ app.use(cookieParser());
 
 // Підключаємо маршрути авторизації
 app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api', catalogRoutes);
+app.use('/api', catalogRoutes);                    // ← каталог першим, публічний
+app.use('/api/seller/products', productRoutes);    // ← виробник окремо, не конфліктує
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);

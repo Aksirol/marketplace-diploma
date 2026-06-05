@@ -53,7 +53,7 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
 
   it('Валідація: Ціна <= 0 або stock_qty від\'ємний → 422', async () => {
     const res = await request(app)
-      .post('/api/products')
+      .post('/api/seller/products')
       .set('Authorization', `Bearer ${userAToken}`)
       .send({ name: 'Milk', price: -50, stock_qty: -10, category_id: categoryId });
 
@@ -63,7 +63,7 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
 
   it('Магазин PENDING: товар зберігається як DRAFT (не видно в каталозі)', async () => {
     const res = await request(app)
-      .post('/api/products')
+      .post('/api/seller/products')
       .set('Authorization', `Bearer ${userBToken}`)
       .send({ name: 'Honey', price: 150, stock_qty: 20, category_id: categoryId });
 
@@ -73,7 +73,7 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
 
   it('Checkpoint: Товар додано → з\'являється зі статусом ACTIVE (Магазин ACTIVE)', async () => {
     const res = await request(app)
-      .post('/api/products')
+      .post('/api/seller/products')
       .set('Authorization', `Bearer ${userAToken}`)
       .send({ name: 'Cheese', price: 200, stock_qty: 5, category_id: categoryId });
 
@@ -84,7 +84,7 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
 
   it('Ізоляція даних: CRUD лише для свого магазину → чужий :id → 404', async () => {
     const res = await request(app)
-      .put(`/api/products/${productA_Id}`)
+      .put(`/api/seller/products/${productA_Id}`)
       .set('Authorization', `Bearer ${userBToken}`)
       .send({ price: 999 });
 
@@ -96,7 +96,7 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
     const fakeImg = Buffer.from('fake-image-data');
 
     const res1 = await request(app)
-      .post(`/api/products/${productA_Id}/images`)
+      .post(`/api/seller/products/${productA_Id}/images`)
       .set('Authorization', `Bearer ${userAToken}`)
       .attach('images', fakeImg, '1.jpg')
       .attach('images', fakeImg, '2.jpg')
@@ -106,7 +106,7 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
     expect(res1.body.images.length).toBe(3);
 
     const res2 = await request(app)
-      .post(`/api/products/${productA_Id}/images`)
+      .post(`/api/seller/products/${productA_Id}/images`)
       .set('Authorization', `Bearer ${userAToken}`)
       .attach('images', fakeImg, '4.jpg')
       .attach('images', fakeImg, '5.jpg')
@@ -118,12 +118,12 @@ describe('Seller Products CRUD (Phase 4.2)', () => {
 
   it('Архівування: Товар зі статусом ARCHIVED не повертається GET /products', async () => {
     const archiveRes = await request(app)
-      .patch(`/api/products/${productA_Id}/archive`)
+      .patch(`/api/seller/products/${productA_Id}/archive`)
       .set('Authorization', `Bearer ${userAToken}`);
     expect(archiveRes.status).toBe(200);
 
     const getRes = await request(app)
-      .get('/api/products')
+      .get('/api/seller/products')
       .set('Authorization', `Bearer ${userAToken}`);
 
     expect(getRes.status).toBe(200);

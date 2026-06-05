@@ -13,11 +13,9 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-router.use(authGuard);
-
-router.get('/',           authGuard, roleGuard([Role.PRODUCER]), getMyProducts);    // ← без цього рядка — провалюється в каталог
-router.post('/',          authGuard, roleGuard([Role.PRODUCER]), createProduct);
-router.put('/:id',        authGuard, roleGuard([Role.PRODUCER]), updateProduct);
+router.get('/',              authGuard, roleGuard([Role.PRODUCER]), getMyProducts);
+router.post('/',             authGuard, roleGuard([Role.PRODUCER]), createProduct);
+router.put('/:id',           authGuard, roleGuard([Role.PRODUCER]), updateProduct);
 router.patch('/:id/archive', authGuard, roleGuard([Role.PRODUCER]), archiveProduct);
 router.post('/:id/images',   authGuard, roleGuard([Role.PRODUCER]),
   uploadMiddleware.array('images', 5), uploadProductImages);
