@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="before 4.2 fix">
+    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="before 4.2 test fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/__tests__/seller-products.test.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/__tests__/seller-products.test.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/app.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/routes/product.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/routes/product.routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/catalog.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/catalog.controller.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,7 +108,7 @@
       <workItem from="1779979713522" duration="488000" />
       <workItem from="1780296806739" duration="6985000" />
       <workItem from="1780395643988" duration="82000" />
-      <workItem from="1780674913612" duration="472000" />
+      <workItem from="1780674913612" duration="1386000" />
     </task>
     <task id="LOCAL-00001" summary="phase 2.4 frontned and fixes">
       <option name="closed" value="true" />
@@ -176,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780317074594</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="before 4.2 test fix">
+      <option name="closed" value="true" />
+      <created>1780675559000</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1780675559000</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -202,6 +208,7 @@
     <MESSAGE value="phase 3.4" />
     <MESSAGE value="phase 3.4 final" />
     <MESSAGE value="before 4.2 fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="before 4.2 fix" />
+    <MESSAGE value="before 4.2 test fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="before 4.2 test fix" />
   </component>
 </project>

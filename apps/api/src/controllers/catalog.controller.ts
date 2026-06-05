@@ -13,10 +13,10 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
 
     const take = parseInt(limit as string, 10);
 
-    // Формуємо унікальний ключ для Redis на основі параметрів
-    const cacheKey = `search:${q || 'all'}:c_${category || 'all'}:l_${location || 'all'}:p_${min_price}-${max_price}:s_${sort}`;
+    // ВИПРАВЛЕНО: Додали limit_${take} до ключа кешу
+    const cacheKey = `search:${q || 'all'}:c_${category || 'all'}:l_${location || 'all'}:p_${min_price}-${max_price}:s_${sort}:limit_${take}`;
 
-    if (!cursor) {
+    if (!cursor || cursor === 'null') {
       const cachedData = await redisClient.get(cacheKey);
       if (cachedData) {
         res.status(200).json({ ...JSON.parse(cachedData), fromCache: true });
@@ -49,7 +49,8 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
 
     const products = await prisma.product.findMany({
       take,
-      ...(cursor && { skip: 1, cursor: { id: cursor as string } }),
+      // ВИПРАВЛЕНО: Захист від рядка "null" з клієнта
+      ...(cursor && cursor !== 'null' && { skip: 1, cursor: { id: cursor as string } }),
       where: whereClause,
       orderBy: orderByClause,
       include: {
@@ -62,7 +63,7 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
     const nextCursor = products.length === take ? products[take - 1].id : null;
     const responseData = { products, nextCursor };
 
-    if (!cursor) {
+    if (!cursor || cursor === 'null') {
       await redisClient.setEx(cacheKey, 60, JSON.stringify(responseData));
     }
 
