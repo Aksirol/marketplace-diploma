@@ -4,9 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="before 4.2 test fix">
+    <list default="true" id="091a3117-f841-4f13-9f7a-aa15cc4c8d96" name="Changes" comment="4.2 before ui">
+      <change afterPath="$PROJECT_DIR$/apps/web/src/app/seller/products/new/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/apps/web/src/app/seller/products/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/catalog.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/catalog.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/controllers/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/controllers/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/api/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/next.config.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/next.config.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/app/register/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/register/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/src/app/seller/register/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/app/seller/register/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +114,7 @@
       <workItem from="1779979713522" duration="488000" />
       <workItem from="1780296806739" duration="6985000" />
       <workItem from="1780395643988" duration="82000" />
-      <workItem from="1780674913612" duration="1386000" />
+      <workItem from="1780674913612" duration="5337000" />
     </task>
     <task id="LOCAL-00001" summary="phase 2.4 frontned and fixes">
       <option name="closed" value="true" />
@@ -182,11 +188,22 @@
       <option name="project" value="LOCAL" />
       <updated>1780675559000</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="4.2 before ui">
+      <option name="closed" value="true" />
+      <created>1780676859948</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1780676859948</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="next.config.mjs" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -209,6 +226,7 @@
     <MESSAGE value="phase 3.4 final" />
     <MESSAGE value="before 4.2 fix" />
     <MESSAGE value="before 4.2 test fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="before 4.2 test fix" />
+    <MESSAGE value="4.2 before ui" />
+    <option name="LAST_COMMIT_MESSAGE" value="4.2 before ui" />
   </component>
 </project>

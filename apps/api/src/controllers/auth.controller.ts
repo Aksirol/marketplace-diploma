@@ -58,7 +58,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     const verifyToken = crypto.randomBytes(32).toString('hex');
-    await redisClient.setEx(`verify:${verifyToken}`, 24 * 60 * 60, newUser.id);
+    // Гарантуємо, що id передається як рядок
+    await redisClient.setEx(`verify:${verifyToken}`, 24 * 60 * 60, String(newUser.id));
 
     console.log(`[Email Mock] Підтвердження email для ${validatedData.email}: http://localhost:3000/verify/${verifyToken}`);
 
@@ -70,6 +71,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     if (error instanceof z.ZodError) {
       res.status(422).json({ message: 'Помилка валідації', errors: error.issues });
     } else {
+      // ДОДАНО ЛОГУВАННЯ: Тепер ти завжди бачитимеш причину падіння у терміналі бекенду
+      console.error('[Register Error]:', error);
       res.status(500).json({ message: 'Помилка сервера під час реєстрації' });
     }
   }
